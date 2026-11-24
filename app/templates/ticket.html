@@ -32,6 +32,7 @@
   </section>
   <footer class="ticket__footer">Present this ticket when boarding. Keep the QR code visible.</footer>
   <div class="ticket__actions no-print">
+    <p id="qrPrintError" class="ticket__print-error" role="alert" hidden>QR code could not load. Refresh the ticket before printing.</p>
     <button type="button" id="printBtn" class="btn btn--primary">Print</button>
     <a href="{{ url_for('main.index') }}" class="btn btn--ghost">Close</a>
   </div>

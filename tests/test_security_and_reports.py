@@ -105,22 +105,22 @@ def test_ticket_page_embeds_qr_for_signed_ticket_url(client, issue_ticket, monke
 
     def fake_qr_data_uri(value):
         generated_for.append(value)
-        return "data:image/svg+xml;base64,PHN2Zy8+"
+        return "data:image/png;base64,iVBORw0KGgo="
 
     monkeypatch.setattr("app.blueprints.main.qr_data_uri", fake_qr_data_uri)
     response = client.get(url)
 
     assert response.status_code == 200
     assert generated_for == [f"http://localhost{url}"]
-    assert b'data:image/svg+xml;base64,PHN2Zy8+' in response.data
+    assert b'data:image/png;base64,iVBORw0KGgo=' in response.data
 
 
-def test_qr_data_uri_contains_svg():
+def test_qr_data_uri_contains_png():
     data_uri = qr_data_uri("https://example.test/ticket/signed-token")
     prefix, encoded = data_uri.split(",", maxsplit=1)
 
-    assert prefix == "data:image/svg+xml;base64"
-    assert b"<svg" in base64.b64decode(encoded)
+    assert prefix == "data:image/png;base64"
+    assert base64.b64decode(encoded).startswith(b"\x89PNG\r\n\x1a\n")
 
 
 # ---- CSRF & headers --------------------------------------------------------

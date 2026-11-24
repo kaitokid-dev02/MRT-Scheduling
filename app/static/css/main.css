@@ -173,6 +173,7 @@ th { background: var(--soft); position: sticky; top: 0; }
 .ticket__summary strong { font-size: .95rem; }
 .ticket__footer { color: var(--muted); font-size: .86rem; text-align: center; }
 .ticket__actions { display: flex; gap: 10px; justify-content: flex-end; }
+.ticket__print-error { align-self: center; margin: 0; color: var(--danger); font-size: .85rem; }
 
 @media (max-width: 720px) {
   body { padding: 10px; }
