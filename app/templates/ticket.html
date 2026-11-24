@@ -10,24 +10,26 @@
     </div>
     <span class="ticket__no">#{{ '%06d' % log.id }}</span>
   </header>
-  <section class="ticket__journey" aria-label="Journey">
-    <h2 class="ticket__name" id="ticket-name">{{ log.name }}</h2>
-    <p class="ticket__stations"><span>{{ log.start_station }}</span><span aria-hidden="true">→</span><strong>{{ log.destination }}</strong></p>
-  </section>
-  <div class="ticket__details">
-    <dl class="ticket__grid">
-      <dt>Route</dt><dd>{{ log.route_path | join(' → ') }}</dd>
-      <dt>Train line</dt><dd>{{ log.train_line }}</dd>
-      <dt>Train</dt><dd>{{ log.train_number }}</dd>
-      <dt>Travel time</dt><dd>{{ log.total_time }} min</dd>
-      <dt>Fare</dt><dd>₱{{ log.fare }}</dd>
-      <dt>Issued</dt><dd>{{ log.timestamp_epoch | local_time }}</dd>
-    </dl>
+  <div class="ticket__layout">
     <aside class="ticket__qr">
       <img src="{{ qr_data_uri }}" alt="QR code for ticket #{{ '%06d' % log.id }}" width="144" height="144">
       <p>Scan to open this ticket</p>
     </aside>
+    <section class="ticket__passenger" aria-label="Journey details">
+      <h2 class="ticket__name" id="ticket-name">{{ log.name }}</h2>
+      <p class="ticket__stations"><span>{{ log.start_station }}</span><span aria-hidden="true">→</span><strong>{{ log.destination }}</strong></p>
+      <p class="ticket__route">Route: {{ log.route_path | join(' → ') }}</p>
+      <dl class="ticket__info">
+        <dt>Train line</dt><dd>{{ log.train_line }}</dd>
+        <dt>Issued</dt><dd>{{ log.timestamp_epoch | local_time }}</dd>
+      </dl>
+    </section>
   </div>
+  <section class="ticket__summary" aria-label="Ticket summary">
+    <div><span>Train</span><strong>{{ log.train_number }}</strong></div>
+    <div><span>Travel time</span><strong>{{ log.total_time }} min</strong></div>
+    <div><span>Fare</span><strong>₱{{ log.fare }}</strong></div>
+  </section>
   <footer class="ticket__footer">Present this ticket when boarding. Keep the QR code visible.</footer>
   <div class="ticket__actions no-print">
     <button type="button" id="printBtn" class="btn btn--primary">Print</button>
