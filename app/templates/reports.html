@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <h2 class="section-title">Reports &amp; analytics</h2>
+  <p class="muted">Transaction history, peak-hour analysis and passenger statistics. Times are shown in {{ server_tz }} unless changed below.</p>
+
+  <div class="toolbar">
+    <select id="filterTrain" aria-label="Filter by train line">
+      <option value="all">All trains</option>
+      {% for line in train_lines %}<option value="{{ line }}">{{ line }}</option>{% endfor %}
+    </select>
+    <select id="filterType" aria-label="Filter by lane">
+      <option value="all">All lanes</option>
+      <option value="regular">Regular</option>
+      <option value="priority">Priority</option>
+    </select>
+    <input id="searchLogs" type="search" placeholder="Search passenger or destination" aria-label="Search">
+    <select id="tzMode" aria-label="Time display">
+      <option value="server">Time: {{ server_tz }}</option>
+      <option value="utc">Time: UTC</option>
+      <option value="local">Time: Browser local</option>
+    </select>
+    <a class="btn btn--ghost" href="{{ url_for('reports.export_csv') }}">Export CSV</a>
+    <button id="clearLogs" type="button" class="btn btn--danger">Clear all logs</button>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" role="tab" id="tab-peak" aria-controls="peak-hours" aria-selected="true" data-tab="peak-hours">Peak hours</button>
+    <button class="tab" role="tab" id="tab-history" aria-controls="transaction-history" aria-selected="false" data-tab="transaction-history">Transaction history</button>
+  </div>
+
+  <div id="peak-hours" class="tab-content active" role="tabpanel" aria-labelledby="tab-peak">
+    {% if peak.total_transactions %}
+      <div class="stats">
+        <div class="stat"><span class="stat__label">Total transactions</span><span class="stat__value">{{ peak.total_transactions }}</span></div>
+        <div class="stat"><span class="stat__label">Peak volume / hour</span><span class="stat__value">{{ peak.peak_volume }}</span></div>
+        <div class="stat stat--wide"><span class="stat__label">Peak hour(s)</span><span class="stat__value stat__value--text">{{ peak.peak_hours | join(', ') }}</span></div>
+        <div class="stat"><span class="stat__label">Time now</span><span class="stat__value" id="liveClock">--:--:--</span></div>
+      </div>
+
+      <h3>Hourly breakdown</h3>
+      <div class="bars">
+        {% for row in peak.breakdown %}
+          <div class="bar-row">
+            <span class="bar-row__label">{{ row.time }}</span>
+            <span class="bar-row__track"><span class="bar {{ 'bar--peak' if row.is_peak }}" style="width: {{ row.percent }}%"></span></span>
+            <span class="bar-row__count">{{ row.count }}{% if row.is_peak %} · peak{% endif %}</span>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="two-col">
+        <div>
+          <h3>Busiest destinations</h3>
+          <ol class="rank">{% for dest, n in busiest_dest %}<li>{{ dest }} <b>{{ n }}</b></li>{% endfor %}</ol>
+        </div>
+        <div>
+          <h3>Busiest routes</h3>
+          <ol class="rank">{% for route, n in busiest_routes %}<li>{{ route }} <b>{{ n }}</b></li>{% endfor %}</ol>
+        </div>
+      </div>
+    {% else %}
+      <p class="empty">No transactions yet. Peak-hour analysis appears once tickets are issued.</p>
+    {% endif %}
+  </div>
+
+  <div id="transaction-history" class="tab-content" role="tabpanel" aria-labelledby="tab-history">
+    {% if logs %}
+      <div class="stats">
+        {% for line, s in line_stats.items() %}
+          <div class="stat"><span class="stat__label">{{ line }}</span>
+            <span class="stat__value">{{ s.total }}</span>
+            <small>{{ s.priority }} priority · {{ s.regular }} regular</small></div>
+        {% endfor %}
+      </div>
+      <p class="muted">Showing <strong id="recordCount">{{ logs | length }}</strong> of {{ logs | length }} records.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Time</th><th>Passenger</th><th>Type</th><th>From → To</th><th>Line</th><th>Train</th><th>Min</th><th>Fare</th><th>Ticket</th></tr></thead>
+          <tbody id="logsTableBody">
+            {% for log in logs %}
+              <tr data-name="{{ log.name }}" data-destination="{{ log.destination }}" data-lane="{{ log.lane }}"
+                  data-train="{{ log.train_line }}" data-ts-epoch="{{ log.timestamp_epoch }}">
+                <td class="tsDisplay">{{ log.timestamp_epoch | local_time }}</td>
+                <td>{{ log.name }}</td>
+                <td><span class="badge badge--{{ log.lane }}">{{ log.type_label }}</span></td>
+                <td>{{ log.start_station }} → {{ log.destination }}</td>
+                <td>{{ log.train_line }}</td>
+                <td>{{ log.train_number }}</td>
+                <td>{{ log.total_time }}</td>
+                <td>₱{{ log.fare }}</td>
+                <td><a href="{{ url_for('main.ticket', token=log.ticket_token) }}" target="_blank" rel="noopener">View</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty">No transactions recorded yet.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/reports.js') }}"></script>{% endblock %}

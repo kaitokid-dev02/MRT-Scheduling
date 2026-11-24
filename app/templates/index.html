@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · MRT/LRT Ticketing{% endblock %}
+
+{% block content %}
+<section class="stats" aria-label="Queue summary">
+  <div class="stat"><span class="stat__label">Priority waiting</span><span class="stat__value" id="priorityCount">0</span></div>
+  <div class="stat"><span class="stat__label">Regular waiting</span><span class="stat__value" id="regularCount">0</span></div>
+  <div class="stat stat--wide"><span class="stat__label">Next up</span>
+    <span class="stat__value stat__value--text"><span id="nextName">—</span> <small id="nextType"></small></span>
+  </div>
+</section>
+
+<section class="panel">
+  <h2 class="section-title">Register passenger</h2>
+  <form id="enqueueForm" method="post" action="{{ url_for('main.index') }}" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group">
+      <label for="name">Full name</label>
+      <input type="text" id="name" name="name" maxlength="80" placeholder="Enter passenger name" required autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label for="p_type">Passenger type</label>
+      <select id="p_type" name="p_type" required>
+        {% for t in passenger_types %}
+          <option value="{{ t.value }}">{{ t.label }}{% if t.priority %} (priority lane){% endif %}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn--primary">Add to queue</button>
+  </form>
+</section>
+
+<section class="panel panel--accent">
+  <h2 class="section-title">Serve &amp; assign</h2>
+  <p class="muted">Serves the next passenger. Priority lane is always served first; each lane is first-come, first-served.</p>
+  <button id="serveButton" type="button" class="btn btn--danger btn--lg" disabled>Serve next passenger</button>
+  <div id="servingBox" class="serving" hidden>
+    <h3>In service</h3>
+    <ul id="servingList" class="serving__list"></ul>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <h2 class="section-title">Live queue</h2>
+    <button id="refreshBtn" type="button" class="btn btn--ghost">Refresh</button>
+  </div>
+  <p id="queueStatus" class="muted" aria-live="polite"></p>
+  <div id="cardsGrid" class="cards"></div>
+</section>
+
+<div id="assignModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="assignTitle" hidden>
+  <div class="modal__box">
+    <h2 id="assignTitle">Assign route &amp; ticket</h2>
+    <p class="modal__who"><strong id="assignName"></strong> · <span id="assignType"></span></p>
+    <form id="assignForm" class="modal__grid">
+      <div class="form-group">
+        <label for="assignStart">Start station</label>
+        <select id="assignStart" name="start_station"></select>
+      </div>
+      <div class="form-group">
+        <label for="assignDestination">Destination</label>
+        <select id="assignDestination" name="destination" required></select>
+      </div>
+      <div class="form-group modal__full">
+        <span class="label">Train</span>
+        <div id="trainOptions" class="trains"><span class="muted">Pick a destination to see trains.</span></div>
+      </div>
+      <div id="routePreview" class="modal__full route-preview" aria-live="polite">No route calculated yet.</div>
+      <div class="modal__actions modal__full">
+        <button id="assignCancel" type="button" class="btn btn--ghost">Cancel (return to queue)</button>
+        <button id="assignSubmit" type="submit" class="btn btn--primary" disabled>Assign &amp; issue ticket</button>
+      </div>
+    </form>
+    <div id="assignResult" class="modal__full" hidden></div>
+  </div>
+</div>
+
+<script type="application/json" id="boot">{{ {"stations": stations, "defaultStart": "North Avenue"} | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }}{% endblock %}
+{% block content %}
+<section class="panel panel--narrow">
+  <h2 class="section-title">{{ code }}</h2>
+  <p>{{ message }}</p>
+  <a class="btn btn--primary" href="{{ url_for('main.index') }}">Back to dashboard</a>
+</section>
+{% endblock %}
