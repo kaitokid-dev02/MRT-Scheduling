@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone, tzinfo
+from datetime import UTC, datetime, tzinfo
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 log = logging.getLogger(__name__)
@@ -18,11 +18,11 @@ def resolve_timezone(name: str) -> tzinfo:
         return ZoneInfo(name)
     except (ZoneInfoNotFoundError, ValueError):
         log.warning("Timezone %r not found; falling back to the system timezone.", name)
-        return datetime.now().astimezone().tzinfo or timezone.utc
+        return datetime.now().astimezone().tzinfo or UTC
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def format_epoch(epoch: int | None, tz: tzinfo, fmt: str = "%Y-%m-%d %H:%M:%S") -> str:

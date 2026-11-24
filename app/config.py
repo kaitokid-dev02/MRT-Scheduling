@@ -40,9 +40,9 @@ class TestingConfig(Config):
     APP_ENV = "testing"
     TESTING = True
     CSRF_ENABLED = False
-    SECRET_KEY = "test-secret"
+    SECRET_KEY = "test-secret"  # noqa: S105 - fixed test-only signing key
     ADMIN_USERNAME = "admin"
-    ADMIN_PASSWORD = "test-password"
+    ADMIN_PASSWORD = "test-password"  # noqa: S105 - fixed test-only password
     ADMIN_PASSWORD_HASH = ""
 
 
@@ -53,7 +53,7 @@ class ProductionConfig(Config):
     @classmethod
     def validate(cls) -> None:
         problems = []
-        if cls.SECRET_KEY == "dev-only-change-me":
+        if cls.SECRET_KEY == "dev-only-change-me":  # noqa: S105 - checks the insecure development default
             problems.append("SECRET_KEY must be set")
         if not cls.ADMIN_PASSWORD_HASH and os.environ.get("ADMIN_PASSWORD") in (None, "", "password"):
             problems.append("ADMIN_PASSWORD_HASH (or a non-default ADMIN_PASSWORD) must be set")

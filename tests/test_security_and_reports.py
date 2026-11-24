@@ -1,6 +1,9 @@
+import base64
+
 import pytest
 
 from app import create_app
+from app.qr import qr_data_uri
 from app.security import is_safe_redirect
 
 # ---- auth -------------------------------------------------------------------
@@ -22,7 +25,8 @@ def test_login_success_and_logout(client, app):
     assert bad.status_code == 401
 
     ok = client.post(
-        "/login", data={"username": "admin", "password": app.config["ADMIN_PASSWORD"], "next": "/reports/export"}
+        "/login",
+        data={"username": "admin", "password": app.config["ADMIN_PASSWORD"], "next": "/reports/export"},
     )
     assert ok.status_code == 302 and ok.headers["Location"].endswith("/reports/export")
     assert client.get("/reports").status_code == 200
@@ -95,6 +99,30 @@ def test_ticket_links_are_signed(client, issue_ticket):
     assert client.get(url[:-3] + "xyz").status_code == 404  # tampered signature
 
 
+def test_ticket_page_embeds_qr_for_signed_ticket_url(client, issue_ticket, monkeypatch):
+    url = issue_ticket()["ticket_url"]
+    generated_for = []
+
+    def fake_qr_data_uri(value):
+        generated_for.append(value)
+        return "data:image/svg+xml;base64,PHN2Zy8+"
+
+    monkeypatch.setattr("app.blueprints.main.qr_data_uri", fake_qr_data_uri)
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert generated_for == [f"http://localhost{url}"]
+    assert b'data:image/svg+xml;base64,PHN2Zy8+' in response.data
+
+
+def test_qr_data_uri_contains_svg():
+    data_uri = qr_data_uri("https://example.test/ticket/signed-token")
+    prefix, encoded = data_uri.split(",", maxsplit=1)
+
+    assert prefix == "data:image/svg+xml;base64"
+    assert b"<svg" in base64.b64decode(encoded)
+
+
 # ---- CSRF & headers --------------------------------------------------------
 
 
@@ -117,7 +145,8 @@ def test_csrf_accepts_valid_token(csrf_app):
     token = page.split('name="csrf-token" content="')[1].split('"')[0]
     ok = client.post("/api/enqueue", json={"name": "X", "p_type": "Regular"}, headers={"X-CSRF-Token": token})
     assert ok.status_code == 201
-    assert client.post("/api/enqueue", json={"name": "Y"}, headers={"X-CSRF-Token": "forged"}).status_code == 403
+    forged = client.post("/api/enqueue", json={"name": "Y"}, headers={"X-CSRF-Token": "forged"})
+    assert forged.status_code == 403
 
 
 def test_security_headers_present(client):

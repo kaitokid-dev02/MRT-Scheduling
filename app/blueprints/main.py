@@ -6,6 +6,7 @@ from flask import Blueprint, current_app, flash, jsonify, redirect, render_templ
 from app.db import get_db
 from app.domain.models import passenger_type_options
 from app.errors import DomainError, NotFoundError
+from app.qr import qr_data_uri
 from app.repositories import LogRepository
 from app.security import read_ticket_token
 from app.services import get_service
@@ -37,7 +38,8 @@ def ticket(token: str):
     log = LogRepository(get_db()).get(log_id) if log_id is not None else None
     if log is None:
         raise NotFoundError("Ticket not found.")
-    return render_template("ticket.html", log=log)
+    ticket_url = url_for("main.ticket", token=token, _external=True)
+    return render_template("ticket.html", log=log, qr_data_uri=qr_data_uri(ticket_url))
 
 
 @bp.route("/healthz")

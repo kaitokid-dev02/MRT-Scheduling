@@ -94,7 +94,9 @@ def import_legacy(legacy_path: Path, target_path: Path, tz_name: str, dry_run: b
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("legacy_db", type=Path)
     parser.add_argument("--target", type=Path, default=Path("instance") / Config.DATABASE)
     parser.add_argument("--timezone", default=Config.APP_TIMEZONE)
