@@ -76,7 +76,7 @@ app/
   static/            CSS and JavaScript
 tests/               Domain, API, security, and import tests
 scripts/             Legacy database import
-docs/                Architecture and development prompt
+docs/                Architecture notes
 ```
 
 ## Migrate data from the old prototype
